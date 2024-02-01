@@ -1,1 +1,0 @@
-<?php echo "hello from new salahtest php"; ?>

@@ -26,7 +26,7 @@ function custom_php_shortcode($atts) {
     ), $atts);
 
     if (empty($atts['name'])) {
-        return ''; // If name attribute is not provided, return empty string
+        return ''; // If name attribute is not provided, return an empty string
     }
 
     ob_start();
@@ -94,9 +94,10 @@ function custom_php_editor_page() {
     // Check if form is submitted and update PHP code
     if (isset($_POST['save_php_code'])) {
         $php_code = wp_unslash($_POST['php_code']);
-        file_put_contents(plugin_dir_path(__FILE__) . 'phpfiles/php-content.php', $php_code);
-        $textarea_content = $php_code;
-        $saved_message = '<p style="color: green;">PHP code saved successfully!</p>';
+        $filename = sanitize_file_name($_POST['filename']); // Get the filename from the form
+        // Save the PHP code to the file
+        file_put_contents(plugin_dir_path(__FILE__) . 'phpfiles/' . $filename, $php_code);
+        $saved_message = '<p style="color: green;">PHP code saved successfully for file: ' . $filename . '!</p>';
     } elseif (isset($_POST['create_php_file'])) { // Check if form is submitted to create a new PHP file
         $new_php_filename = sanitize_file_name($_POST['new_php_filename']);
         $new_php_file_content = sprintf('<?php echo "hello from new %s php"; ?>', $new_php_filename); // Content for new PHP file
@@ -117,6 +118,7 @@ function custom_php_editor_page() {
         <?php echo $saved_message; ?>
         <p>Edit the PHP code below:</p>
         <form method="post" action="">
+            <input type="hidden" name="filename" value="<?php echo isset($_POST['file_to_edit']) ? $_POST['file_to_edit'] : ''; ?>">
             <textarea name="php_code" rows="10" cols="50"><?php echo $textarea_content; ?></textarea>
             <br>
             <input type="submit" name="save_php_code" class="button button-primary" value="Save PHP Code">
@@ -171,6 +173,7 @@ function custom_php_editor_page() {
     </script>
     <?php
 }
+
 
 // Import/Export PHP files page
 function custom_php_import_export_page() {
@@ -248,8 +251,6 @@ function custom_php_download_json_file() {
     wp_die();
 }
 
-
 // Add hooks for import/export pages
 add_action('admin_menu', 'custom_php_add_menu');
-
 ?>
