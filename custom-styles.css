@@ -1,0 +1,20 @@
+/* Custom styles for DataTables pagination */
+.dataTables_paginate {
+    float: right;
+    margin-top: 20px;
+}
+
+.dataTables_paginate .paginate_button {
+    margin-left: 5px;
+    display: inline-block; /* Display buttons inline */
+}
+
+.dataTables_paginate .paginate_button.current {
+    background-color: #007cba;
+    color: #fff;
+    border-color: #007cba;
+}
+
+.dataTables_paginate .paginate_button.disabled {
+    display: none;
+}
