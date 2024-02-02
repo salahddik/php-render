@@ -19,7 +19,7 @@ function custom_php_enqueue_scripts() {
 }
 add_action('admin_enqueue_scripts', 'custom_php_enqueue_scripts');
 
-// Function to include and print content from specified PHP file
+// Function to include and execute content from specified PHP file
 function custom_php_shortcode($atts) {
     $atts = shortcode_atts(array(
         'name' => '', // Attribute to specify the PHP file name
@@ -29,16 +29,16 @@ function custom_php_shortcode($atts) {
         return ''; // If name attribute is not provided, return an empty string
     }
 
-    // Get the content of the specified PHP file
-    $file_content = '';
-    $file_path = plugin_dir_path(__FILE__) . 'phpfiles/' . $atts['name'];
-    if (file_exists($file_path)) {
-        ob_start();
-        include($file_path);
-        $file_content = ob_get_clean();
-    }
+    ob_start();
+    include(plugin_dir_path(__FILE__) . 'phpfiles/' . $atts['name']);
+    $template_content = ob_get_clean();
 
-    return $file_content;
+    // Execute PHP code
+    ob_start();
+    eval('?>' . $template_content);
+    $executed_content = ob_get_clean();
+
+    return $executed_content;
 }
 
 // Register shortcode
@@ -115,14 +115,16 @@ function custom_php_editor_page() {
     ?>
     <div class="wrap">
         <h2>PHP Editor</h2>
-        <?php echo $saved_message; ?>
-        <p>Edit the PHP code below:</p>
-        <form method="post" action="">
-            <input type="hidden" name="filename" value="<?php echo isset($_POST['file_to_edit']) ? $_POST['file_to_edit'] : ''; ?>">
-            <textarea name="php_code" rows="10" cols="50"><?php echo $textarea_content; ?></textarea>
-            <br>
-            <input type="submit" name="save_php_code" class="button button-primary" value="Save PHP Code">
-        </form>
+        <div id="php-editor-section" >
+            <?php echo $saved_message; ?>
+            <p>Edit the PHP code below:</p>
+            <form method="post" action="">
+                <input type="hidden" name="filename" value="<?php echo isset($_POST['file_to_edit']) ? $_POST['file_to_edit'] : ''; ?>">
+                <textarea name="php_code" rows="10" cols="50"><?php echo $textarea_content; ?></textarea>
+                <br>
+                <input type="submit" name="save_php_code" class="button button-primary" value="Save PHP Code">
+            </form>
+        </div>
 
         <h3>Create New PHP File</h3>
         <form method="post" action="">
@@ -164,16 +166,26 @@ function custom_php_editor_page() {
         </table>
     </div>
     <script>
-        jQuery(document).ready(function($) {
-            $('#php_files_table').DataTable({
-                "paging": true,
-                "searching": true
+        document.addEventListener('DOMContentLoaded', function() {
+            var phpEditorSection = document.getElementById('php-editor-section');
+
+            // Check if the PHP Editor section should be shown initially
+            var editPhpFile = "<?php echo isset($_POST['edit_php_file']) ? $_POST['edit_php_file'] : ''; ?>";
+            if (editPhpFile) {
+                phpEditorSection.style.display = 'block';
+            }
+
+            // Hide the "Edit PHP Code" button when the user clicks "Edit" in the table
+            var editPhpButtons = document.querySelectorAll('input[name="edit_php_file"]');
+            editPhpButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    phpEditorSection.style.display = 'block';
+                });
             });
         });
     </script>
-    <?php
+<?php
 }
-
 
 // Import/Export PHP files page
 function custom_php_import_export_page() {
