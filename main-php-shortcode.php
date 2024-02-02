@@ -19,7 +19,7 @@ function custom_php_enqueue_scripts() {
 }
 add_action('admin_enqueue_scripts', 'custom_php_enqueue_scripts');
 
-// Function to include and execute content from specified PHP file
+// Function to include and print content from specified PHP file
 function custom_php_shortcode($atts) {
     $atts = shortcode_atts(array(
         'name' => '', // Attribute to specify the PHP file name
@@ -29,16 +29,16 @@ function custom_php_shortcode($atts) {
         return ''; // If name attribute is not provided, return an empty string
     }
 
-    ob_start();
-    include(plugin_dir_path(__FILE__) . 'phpfiles/' . $atts['name']);
-    $template_content = ob_get_clean();
+    // Get the content of the specified PHP file
+    $file_content = '';
+    $file_path = plugin_dir_path(__FILE__) . 'phpfiles/' . $atts['name'];
+    if (file_exists($file_path)) {
+        ob_start();
+        include($file_path);
+        $file_content = ob_get_clean();
+    }
 
-    // Execute PHP code
-    ob_start();
-    eval('?>' . $template_content);
-    $executed_content = ob_get_clean();
-
-    return $executed_content;
+    return $file_content;
 }
 
 // Register shortcode
