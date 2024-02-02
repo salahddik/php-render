@@ -95,9 +95,17 @@ function custom_php_editor_page() {
     if (isset($_POST['save_php_code'])) {
         $php_code = wp_unslash($_POST['php_code']);
         $filename = sanitize_file_name($_POST['filename']); // Get the filename from the form
-        // Save the PHP code to the file
-        file_put_contents(plugin_dir_path(__FILE__) . 'phpfiles/' . $filename, $php_code);
-        $saved_message = '<p style="color: green;">PHP code saved successfully for file: ' . $filename . '!</p>';
+        
+        // Check if PHP code is empty
+        if (empty($php_code)) {
+            $saved_message = '<p style="color: red;">PHP file is empty!</p>';
+        } else {
+            // Save the PHP code to the file
+            file_put_contents(plugin_dir_path(__FILE__) . 'phpfiles/' . $filename, $php_code);
+            $saved_message = '<p style="color: green;">PHP code saved successfully for file: ' . $filename . '!</p>';
+        }
+        // Update textarea content after saving
+        $textarea_content = esc_textarea($php_code);
     } elseif (isset($_POST['create_php_file'])) { // Check if form is submitted to create a new PHP file
         $new_php_filename = sanitize_file_name($_POST['new_php_filename']);
         $new_php_file_content = sprintf('<?php echo "hello from new %s php"; ?>', $new_php_filename); // Content for new PHP file
@@ -115,7 +123,7 @@ function custom_php_editor_page() {
     ?>
     <div class="wrap">
         <h2>PHP Editor</h2>
-        <div id="php-editor-section" >
+        <div id="php-editor-section">
             <?php echo $saved_message; ?>
             <p>Edit the PHP code below:</p>
             <form method="post" action="">
@@ -186,6 +194,7 @@ function custom_php_editor_page() {
     </script>
 <?php
 }
+
 
 // Import/Export PHP files page
 function custom_php_import_export_page() {
