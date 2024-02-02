@@ -19,7 +19,7 @@ function custom_php_enqueue_scripts() {
 }
 add_action('admin_enqueue_scripts', 'custom_php_enqueue_scripts');
 
-// Function to include and execute content from specified PHP file
+// Function to include and print content from specified PHP file
 function custom_php_shortcode($atts) {
     $atts = shortcode_atts(array(
         'name' => '', // Attribute to specify the PHP file name
@@ -29,17 +29,18 @@ function custom_php_shortcode($atts) {
         return ''; // If name attribute is not provided, return an empty string
     }
 
-    ob_start();
-    include(plugin_dir_path(__FILE__) . 'phpfiles/' . $atts['name']);
-    $template_content = ob_get_clean();
+    // Get the content of the specified PHP file
+    $file_content = '';
+    $file_path = plugin_dir_path(__FILE__) . 'phpfiles/' . $atts['name'];
+    if (file_exists($file_path)) {
+        ob_start();
+        include($file_path);
+        $file_content = ob_get_clean();
+    }
 
-    // Execute PHP code
-    ob_start();
-    eval('?>' . $template_content);
-    $executed_content = ob_get_clean();
-
-    return $executed_content;
+    return $file_content;
 }
+
 
 // Register shortcode
 add_shortcode('render-php', 'custom_php_shortcode');
@@ -96,12 +97,18 @@ function custom_php_editor_page() {
         $php_code = wp_unslash($_POST['php_code']);
         $filename = sanitize_file_name($_POST['filename']); // Get the filename from the form
         
+        // Check if the directory exists, and if not, create it
+        $directory = plugin_dir_path(__FILE__) . 'phpfiles/';
+        if (!file_exists($directory)) {
+            mkdir($directory, 0755, true); // Create the directory with permissions
+        }
+
         // Check if PHP code is empty
         if (empty($php_code)) {
             $saved_message = '<p style="color: red;">PHP file is empty!</p>';
         } else {
             // Save the PHP code to the file
-            file_put_contents(plugin_dir_path(__FILE__) . 'phpfiles/' . $filename, $php_code);
+            file_put_contents($directory . $filename, $php_code);
             $saved_message = '<p style="color: green;">PHP code saved successfully for file: ' . $filename . '!</p>';
         }
         // Update textarea content after saving
@@ -109,7 +116,14 @@ function custom_php_editor_page() {
     } elseif (isset($_POST['create_php_file'])) { // Check if form is submitted to create a new PHP file
         $new_php_filename = sanitize_file_name($_POST['new_php_filename']);
         $new_php_file_content = sprintf('<?php echo "hello from new %s php"; ?>', $new_php_filename); // Content for new PHP file
-        file_put_contents(plugin_dir_path(__FILE__) . 'phpfiles/' . $new_php_filename . '.php', $new_php_file_content);
+        
+        // Check if the directory exists, and if not, create it
+        $directory = plugin_dir_path(__FILE__) . 'phpfiles/';
+        if (!file_exists($directory)) {
+            mkdir($directory, 0755, true); // Create the directory with permissions
+        }
+        
+        file_put_contents($directory . $new_php_filename . '.php', $new_php_file_content);
         $saved_message = '<p style="color: green;">New PHP file created successfully!</p>';
     } elseif (isset($_POST['delete_php_file'])) { // Check if form is submitted to delete a PHP file
         $file_to_delete = sanitize_file_name($_POST['file_to_delete']);
